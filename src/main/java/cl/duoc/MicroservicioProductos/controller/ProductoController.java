@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cl.duoc.MicroservicioProductos.Assembler.ProductoAssembler;
 import cl.duoc.MicroservicioProductos.entity.Producto;
 import cl.duoc.MicroservicioProductos.service.ProductoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,9 @@ public class ProductoController {
     @Autowired
     private ProductoService productoService;
 
+    @Autowired
+    private ProductoAssembler assembler;
+
     //endpoint para listar los productos
     @GetMapping
     @Operation(summary = "Productos", description = "Operación que lista los Productos")
@@ -47,7 +51,7 @@ public class ProductoController {
     public ResponseEntity<?> obtenerProductos() {
         try {
             List<Producto> productos = productoService.obtenerProductos();
-            return ResponseEntity.ok(productos);
+            return ResponseEntity.ok(assembler.toCollectionModel(productos));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al obtener productos: " + e.getMessage());
         }
@@ -71,7 +75,7 @@ public class ProductoController {
         try {
             Producto producto = productoService.obtenerPorId(id);
             return producto != null
-                    ? ResponseEntity.ok(producto)
+                    ? ResponseEntity.ok(assembler.toModel(producto))
                     : ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al buscar el producto: " + e.getMessage());
@@ -93,7 +97,7 @@ public class ProductoController {
     public ResponseEntity<?> crearProducto(@RequestBody Producto producto) {
         try {
             Producto nuevoProducto = productoService.guardarProducto(producto);
-            return ResponseEntity.ok(nuevoProducto);
+            return ResponseEntity.ok(assembler.toModel(nuevoProducto));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al crear el producto: " + e.getMessage());
         }
@@ -120,7 +124,7 @@ public class ProductoController {
             if (productoExistente != null) {
                 productoActualizado.setIdItem(id);
                 Producto actualizado = productoService.guardarProducto(productoActualizado);
-                return ResponseEntity.ok(actualizado);
+                return ResponseEntity.ok(assembler.toModel(productoActualizado));
             } else {
                 return ResponseEntity.notFound().build();
             }
